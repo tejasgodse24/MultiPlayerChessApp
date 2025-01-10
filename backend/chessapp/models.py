@@ -6,6 +6,7 @@ class GameDB(models.Model):
     white_player1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="white_player1")
     black_player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="black_player2")
     status = models.CharField(max_length=100)
+    fen_string = models.CharField(max_length=90, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -21,6 +22,6 @@ class Move(models.Model):
 
 
     def __str__(self):
-        return self.gameid + ":" + self.move_from + self.move_to
+        return str(self.gameid.gameid) + ":" + self.move_from + self.move_to
 
 

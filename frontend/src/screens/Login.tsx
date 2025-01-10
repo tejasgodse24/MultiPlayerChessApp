@@ -9,8 +9,12 @@ const Login = () => {
     const navigate = useNavigate();
 
     const reachGoogle = () => {
-        const clientID = encodeURIComponent("22097740984-mj9hc7l6ivgr7kr5v9111699094mck84.apps.googleusercontent.com");
-        const callBackURI = encodeURIComponent("http://localhost:5173/");
+        // const clientID = encodeURIComponent("22097740984-mj9hc7l6ivgr7kr5v9111699094mck84.apps.googleusercontent.com");
+        // const callBackURI = encodeURIComponent("http://localhost:5173/");
+        const clientID = import.meta.env.VITE_GOOGLE_LOGIN_CLIENT_ID
+        const callBackURI = import.meta.env.VITE_SOCIAL_LOGIN_CALLBACK_URI;
+        console.log(clientID, callBackURI);
+        
         window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${callBackURI}&prompt=consent&response_type=code&client_id=${clientID}&scope=openid%20email%20profile&access_type=offline`)
     }
 

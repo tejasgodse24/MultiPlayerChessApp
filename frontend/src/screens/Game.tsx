@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react'
 import ChessBoard from '../components/ChessBoard'
 import Button from '../components/Button'
 import { useSocket } from '../hooks/useSocket'
-import { Chess } from 'chess.js'
+import { Chess, Square } from 'chess.js'
 import Popup from '../components/Popup'
 import { DiVim } from 'react-icons/di'
 import { Bounce, toast } from 'react-toastify'
+import showToast from '../services/toastService'
 
 
 export const INIT_GAME = "init_game"
@@ -14,6 +15,7 @@ export const GAME_OVER = "game_over"
 export const INVALID_MOVE = "invalid_move"
 export const WRONG_TURN = "wrong_turn"
 export const TURN = "turn"
+export const RELOAD_BOARD = "reload_board"
 
 
 
@@ -26,19 +28,8 @@ const Game = () => {
   const [isMyTurn, setIsMyTurn] = useState(false)
   const [isPopupOpen, setIsPopupOpen] = useState(true);
 
-  const showToast = (msg: string)=>{
-    toast(msg, {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "dark",
-      transition: Bounce,
-      });
-  }
+  // const [moveStack, setMoveStack] = useState<any>("")
+  const [moveStack, setMoveStack] = useState<any[]>([]);
 
   useEffect(()=>{
     if(!socket){
@@ -46,7 +37,6 @@ const Game = () => {
     }
     socket.onmessage = (event) =>{
       const message = JSON.parse(event.data)
-      console.log(message)
 
       switch(message.type){
         case INIT_GAME:
@@ -54,20 +44,21 @@ const Game = () => {
           showToast(`Your Color is ${message.color}`);
 
           setBoard(chess.board());
+
           setIsStarted(true);
           if(message.color == "white"){
             setIsMyTurn(true);
           }
-          
           break;
         case MOVE:
-            console.log("Game Move")
-            const move = message.move;
-            console.log("move", move.slice(0, 2), move.slice(2, 4))
-
+            let move = message.move;
             chess.move(move);
-
             setBoard(chess.board()); 
+
+            // setMoveStack((prevMove:any)=>[prevMove + move])
+            setMoveStack((prevMove:any) => [...prevMove, `${message.move_player_name} : ${move}`]);
+            console.log(moveStack);
+            
             break;
         case GAME_OVER:
           showToast("Game Over");
@@ -81,8 +72,15 @@ const Game = () => {
           showToast(message.msg);
           break;
         case TURN:
-          showToast(message.msg);
           setIsMyTurn(true)
+          break;
+        case RELOAD_BOARD:
+          showToast("Game Reloaded");
+
+          chess.load(message.fen_string)
+
+          setBoard(chess.board());
+          setIsStarted(true);
           break;
           
       }
@@ -105,7 +103,7 @@ const Game = () => {
           {
             isStarted &&  (<div className='p-4 text-green-500 text-xl'><p> {isMyTurn ? "Your Turn" : "Opponant's Turn"} </p></div>)
           }
-          <ChessBoard chess={chess} setBoard={setBoard} board={board} socket={socket} setIsMyTurn={setIsMyTurn} />
+          <ChessBoard chess={chess} setBoard={setBoard} board={board} socket={socket} isMyTurn={isMyTurn} setIsMyTurn={setIsMyTurn} />
         </div>
         <div className='col-span-2 bg-slate-800 w-full flex justify-center'>
           <div className='pt-10'>
@@ -117,7 +115,30 @@ const Game = () => {
           }} >
                 Play 
           </Button> }
+
           </div>
+          {
+            isStarted && 
+
+            <div className='col-span-2 bg-slate-800 w-full flex flex-col items-center'>
+              <h4 className='text-white my-7'>Moves</h4>
+              {
+              <div className='flex flex-col gap-2 text-white'>
+                {/* {moveStack.map((item:any, i:any)=> {
+                  <div key={i}>{item}</div>
+                })} */}
+
+                  {moveStack.map((move:any, index:any) => (
+                    <div key={index}>{move}</div>
+                  ))}
+            
+              </div>
+              }
+
+          </div>
+          }
+          
+
         </div>
 
       </div>

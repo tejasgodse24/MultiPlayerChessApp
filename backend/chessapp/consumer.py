@@ -2,6 +2,9 @@ import json
 from channels.generic.websocket import WebsocketConsumer
 from chessapp.game_manager import game_manager
 from asgiref.sync import async_to_sync
+from django.contrib.auth.models import User
+
+from rest_framework_simplejwt.tokens import AccessToken
 
 
 class ChessConsumer(WebsocketConsumer):
@@ -12,17 +15,34 @@ class ChessConsumer(WebsocketConsumer):
 
     def connect(self):
         self.user = self.scope['user']
-        self.accept()
+        try:
+            token = AccessToken(self.scope['url_route']['kwargs']['token'])
+            # Extract user ID from token
+            user_id = token['user_id']
+            self.user = User.objects.get(id=user_id)
 
-        async_to_sync(self.channel_layer.send)(
-            self.channel_name,
-            {
-                "type": "user_join",
-                "message": "You are connected...",
-            }
-        )
+            self.accept()
+        except Exception as e:
+            print("error : ", e)
+            
 
-        game_manager.add_user(socket=self)
+        if self.user:
+            async_to_sync(self.channel_layer.send)(
+                self.channel_name,
+                {
+                    "type": "user_join",
+                    "message": "You are connected...",
+                }
+            )
+            game_manager.add_user(socket=self)
+        else:
+            async_to_sync(self.channel_layer.send)(
+                self.channel_name,
+                {
+                    "type": "user_join",
+                    "message": "You are connected... but not logged in.",
+                }
+            )
 
 
     def disconnect(self, code):
@@ -56,4 +76,7 @@ class ChessConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps(event["payload"]))
 
     def turn(self, event):
+        self.send(text_data=json.dumps(event["payload"]))
+
+    def reload_board(self, event):
         self.send(text_data=json.dumps(event["payload"]))

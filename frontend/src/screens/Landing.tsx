@@ -7,6 +7,7 @@ import authService from "../services/authService";
 import { getToken, storeToken } from "../services/localStorageService";
 import { useDispatch } from "react-redux";
 import { setUserTokens } from "../features/auth/authSlice";
+import showToast from "../services/toastService";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -15,7 +16,8 @@ const Landing = () => {
   const dispatch = useDispatch();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+  
+  
   useEffect(() => {
     const fetchTokens = async () => {
       const response = await authService.googleLogin({
@@ -23,7 +25,7 @@ const Landing = () => {
       });
 
       if (response.status === "true") {
-        console.log("Login successful!");
+        console.log("Login successful!", response);
 
         storeToken({
           access: response.access_token,
@@ -34,6 +36,7 @@ const Landing = () => {
           setUserTokens({
             access_token: response.access_token,
             refresh_token: response.refresh_token,
+            username : ""
           })
         );
 
@@ -46,14 +49,28 @@ const Landing = () => {
       }
     };
 
-    if (values.code?.toString()) {
-      fetchTokens();
-    } else {
-      const { access } = getToken();
-      if (access) {
-        setIsLoggedIn(true);
+
+    const checkToken = async ()=>{
+      if (values.code?.toString()) {
+        fetchTokens();
+      } else {
+        const { access } = getToken();
+        if (access) {
+          const res = await authService.verifyToken({code: access});
+          if(res.status == "true"){
+            setIsLoggedIn(true);
+          }
+          else{
+            navigate("/login")
+          }
+          
+        }
       }
     }
+
+
+    checkToken();
+    
     return () => {};
   }, []);
 
