@@ -51,7 +51,23 @@ You need the following things installed on your system to play the game.
 This game can be played by multiple users, 2 users per game room. A user needs to first register or log in using google login. Write Now only "Sign In with Google" is in wokring state.
 Some screen shots of game are attched below for reference.
 
+## Game Flow 
 
-<img src="" width="500px" height="350px"/>
+1) Login Page at Start
+<img src="https://raw.githubusercontent.com/tejasgodse24/MultiPlayerChessApp/refs/heads/main/frontend/src/assets/game_screenshots/login.png" width="550px" height="300px"/>
 
-<img src="" width="500px" height="350px"/>
+2) Home page to go to chess Board
+<img src="https://raw.githubusercontent.com/tejasgodse24/MultiPlayerChessApp/refs/heads/main/frontend/src/assets/game_screenshots/after_login.png" width="550px" height="300px"/>
+
+3) When Both players click on "Start Game" button then game starts
+<img src="https://raw.githubusercontent.com/tejasgodse24/MultiPlayerChessApp/refs/heads/main/frontend/src/assets/game_screenshots/game_start.png" width="550px" height="300px"/>
+
+4) player makes random moves
+<img src="https://raw.githubusercontent.com/tejasgodse24/MultiPlayerChessApp/refs/heads/main/frontend/src/assets/game_screenshots/move.png" width="550px" height="300px"/>
+
+5) If player make invalid move
+<img src="https://raw.githubusercontent.com/tejasgodse24/MultiPlayerChessApp/refs/heads/main/frontend/src/assets/game_screenshots/invalid_move.png" width="550px" height="300px"/>
+
+6) After Game Over
+<img src="https://raw.githubusercontent.com/tejasgodse24/MultiPlayerChessApp/refs/heads/main/frontend/src/assets/game_screenshots/game_over.png" width="500px" height="350px"/>
+
