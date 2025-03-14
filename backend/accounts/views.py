@@ -8,6 +8,15 @@ import logging
 import jwt
 from requests import Response
 
+from rest_framework_simplejwt.views import TokenVerifyView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import UntypedToken
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.views import APIView
+
+User = get_user_model()
 
 class GoogleLogin(SocialLoginView): # if you want to use Authorization Code Grant, use this
     adapter_class = GoogleOAuth2Adapter
@@ -15,4 +24,21 @@ class GoogleLogin(SocialLoginView): # if you want to use Authorization Code Gran
     callback_url = "http://localhost:5173/"
     client_class = OAuth2Client
 
-    
+
+class CustomTokenVerifyView(TokenVerifyView):
+    def post(self, request, *args, **kwargs):
+        print("hello")
+        token = request.data.get("token")
+        try:
+            payload = UntypedToken(token)  # Decode token
+            user_id = payload.get("user_id")
+
+            user = User.objects.get(id=user_id)
+            print("email",  user.email)
+            return Response({
+                "message": "Token is valid",
+                "email": user.email
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            raise AuthenticationFailed("Invalid token")

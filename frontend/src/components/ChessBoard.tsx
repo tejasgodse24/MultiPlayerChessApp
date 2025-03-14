@@ -2,23 +2,27 @@ import { Color, PieceSymbol, Square } from 'chess.js';
 import React, { useState } from 'react'
 import { MOVE } from '../screens/Game';
 
-const ChessBoard = ({board , socket, chess, setBoard, isMyTurn, setIsMyTurn} : {
+const ChessBoard = ({board , socket, isMyTurn, setIsMyTurn, incomingMove, myColorRef} : {
     board: ({
         square: Square;
         type: PieceSymbol;
         color: Color;
     } | null )[][];
     socket: WebSocket;
-    chess:any;
-    setBoard:any;
-    isMyTurn:any
+    isMyTurn:any;
     setIsMyTurn:any;
+    incomingMove?: string;
+    myColorRef:string;
 }) => {
   const [from, setFrom] = useState<null | Square>(null);
   const [to, setTo] = useState<null | Square>(null);
 
+
+  console.log(incomingMove);
+  
+
   return (
-    <div className='text-white-200'>
+    <div className={`text-white-200 ${myColorRef == "black" ? "rotate-180" : ""}`}>
       {board.map((row, i)=>{
         return <div key={i} className='flex'>
             {row.map((square, j)=>{
@@ -30,19 +34,22 @@ const ChessBoard = ({board , socket, chess, setBoard, isMyTurn, setIsMyTurn} : {
                       setFrom(squareRepresentation)
                     }
                     else{
-                      socket.send(JSON.stringify({
-                        type: MOVE,
-                        move: from + squareRepresentation
-                      }))
-
-                      setFrom(null);
-                      setIsMyTurn(false);
+                      if(from == squareRepresentation){
+                        console.log("same")
+                      }
+                      else{
+                        socket.send(JSON.stringify({
+                          type: MOVE,
+                          move: from + squareRepresentation
+                        }))
+                        setFrom(null);
+                      }
 
                     }
                   }
-                }} key={j} className={`w-16 h-16 ${(i+j)%2===0 ? "bg-green-500": "bg-green-300"}` } >
+                }} key={j} id={String.fromCharCode(96 + (j + 1)) + (8- i)} className={`w-16 h-16 ${String.fromCharCode(96 + (j + 1)) + (8- i) == incomingMove?.slice(0,2) || String.fromCharCode(96 + (j + 1)) + (8- i) == incomingMove?.slice(2, 4) ? "bg-yellow-600" : (i+j)%2===0 ? "bg-green-500": "bg-green-300"} ` } >
                     <div className='flex justify-center items-center w-full h-full'>
-                      {square ? <img className='w-14' src={`/${square.color}${square.type}.png`} /> : null}
+                      {square ? <img className={`w-14 ${myColorRef == "black" ? "rotate-180" : ""}`} src={`/${square.color}${square.type}.png`} /> : null}
                     </div>
                 </div>
             })}

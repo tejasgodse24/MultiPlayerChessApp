@@ -9,6 +9,7 @@ interface GoogleLoginResponse {
   access_token?: string;
   refresh_token?: string;
   errormsg?: string;
+  username?: string
 }
 
 
@@ -32,8 +33,8 @@ export class AuthService {
         body,
         config
       );
-
-      return {status: "true", access_token: res.data.access, refresh_token: res.data.refresh };
+      console.log(res)
+      return {status: "true", access_token: res.data.access, refresh_token: res.data.refresh, username: res.data.user.email };
       
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -61,12 +62,12 @@ export class AuthService {
     const body = JSON.stringify({ token: decodeURIComponent(code) });
     try { 
       const res = await axios.post(
-        "http://localhost:8000/accounts/token/verify/",
+        "http://localhost:8000/accounts/token/customverify/",
         body,
         config
       );
-
-      return {status: "true" };
+      console.log(res.data)
+      return {status: "true" , username: res.data.email};
 
     } catch (error) {
       if (axios.isAxiosError(error)) {

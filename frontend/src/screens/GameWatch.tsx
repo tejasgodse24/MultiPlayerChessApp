@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import ChessBoard from '../components/ChessBoard'
+import  { useEffect, useState } from 'react'
 import Button from '../components/Button'
 import { useSocket } from '../hooks/useSocket'
 import { Chess } from 'chess.js'
 import Popup from '../components/Popup'
 import showToast from '../services/toastService'
 import { useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import ChessBoard2 from '../components/ChessBoard2'
 
 
 export const INIT_GAME = "init_game"
@@ -18,15 +18,18 @@ export const TURN = "turn"
 export const RELOAD_BOARD = "reload_board"
 export const TIME_RELOAD = "time_reload"
 export const USER_CONNECTED = "user_connected"
+export const GAME_NOT_LIVE = "game_not_live"
+export const CONNECT_WATCH_USER= "connect_watch_user"
+
 
 const GAME_TIME_MS = 10 * 60 * 1000;
 // const GAME_TIME_MS = 1 * 60 * 1000;
 
 
 
-const Game = () => {
+const GameWatch = () => {
 
-  const socket = useSocket();
+  const socket2 = useSocket();
   const [chess, setChess] = useState(new Chess())
   const [board, setBoard] = useState(chess.board())
   const [isConnected, setIsConnected] = useState(false)
@@ -34,10 +37,8 @@ const Game = () => {
   const [isStarted, setIsStarted] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
 
-  const [isMyTurn, setIsMyTurn] = useState(false)
   const [isPopupOpen, setIsPopupOpen] = useState(true);
 
-  const myColorRef = useRef("");
 
   const [moveStack, setMoveStack] = useState<any[]>([]);
 
@@ -48,61 +49,41 @@ const Game = () => {
   const [player1TimeConsumed, setPlayer1TimeConsumed] = useState(0);
   const [player2TimeConsumed, setPlayer2TimeConsumed] = useState(0);
 
+
+  const [currTurn, setCurrTurn] = useState<string>("")
+  const { gameid } = useParams();
+
   const navigate = useNavigate();
 
   useEffect(()=>{
-    if(!socket){
+    if(!socket2){
+        console.log("not socket is here")
       return
     }
     
-    socket.onmessage = (event) =>{
+    socket2.onmessage = (event) =>{
       const message = JSON.parse(event.data)
-
+      console.log(message);
       switch(message.type){
         case USER_CONNECTED:
+          setIsConnected(true)
           console.log("user connected", message.message)
-          break;
-        case INIT_GAME:
-          showToast("Game Initialized");
-          console.log(message.white, userName, message.black)
-          if(message.white == userName){
-            showToast(`Your Color is white`);
-            
-            myColorRef.current = "white";
-            setIsMyTurn(true);
-          }
-          else{
-            showToast(`Your Color is black`);
-          
-            myColorRef.current = "black";
-          }
-          setBoard(chess.board());
-          setIsStarted(true);
-          
           break;
         case MOVE:
             let move = message.move;
             chess.move(move);
             setIncomingMove(move);  //incoming from ws server
             setBoard(chess.board()); 
-            console.log("next_turn_player_color", myColorRef.current, message.next_turn_player_color)
-            if(message.next_turn_player_color == myColorRef.current){
-              setIsMyTurn(true)
-            }
-            else{
-              setIsMyTurn(false);
-            }
-            
+            setCurrTurn(message.next_turn_player_color);
+          
             
             setMoveStack((prevMove:any) => [...prevMove, `${message.move_player_name} : ${move}`]);
-            console.log(moveStack);
-
+           
             setPlayer1TimeConsumed(message.player1_time_consumed);
             setPlayer2TimeConsumed(message.player2_time_consumed);
 
             break;
         case GAME_OVER:
-          console.log("Game Over: Game Over")
           showToast("Game Over");
           showToast(`Winner is ${message.winner}`);
           // setChess(new Chess());
@@ -110,58 +91,41 @@ const Game = () => {
           // setIsStarted(false);
           setIsGameOver(true)
           break;
-        // case INVALID_MOVE:
-        //   setIsMyTurn(true);
-        //   // showToast(message.msg);
-        //   break;
-        // case WRONG_TURN:
-        //   showToast(message.msg);
-        //   break;
-        // case TURN:
-        //   setIsMyTurn(true)
-        //   break;
-        case RELOAD_BOARD:
-          console.log("reload board : ", message)
-          if(message.color == "white"){
-            myColorRef.current = "white";
-          }
-          else{
-            myColorRef.current = "black";
-          }
-          chess.load(message.fen_string)
-          setIncomingMove(message.last_move); //incoming from ws server
-          setBoard(chess.board());
+        // case RELOAD_BOARD:
+        //   console.log("reload board : ", message)
+        
+        //   chess.load(message.fen_string)
+        //   setIncomingMove(message.last_move); //incoming from ws server
+        //   setBoard(chess.board());
+        //   setCurrTurn(message.next_turn_player_color)
 
-          if(userName == message.last_move_username){
-            console.log(userName,  message.last_move_username)
-          }
-          else{
-            setIsMyTurn(true);
-          }
-          break;
+        //   break;
 
         case TIME_RELOAD:
-          console.log("time reload : ", message)
           setPlayer1TimeConsumed(message.player1_time_consumed);
           setPlayer2TimeConsumed(message.player2_time_consumed);
-          if(message.last_move_player_color == "white"){
-            if(myColorRef.current == "black"){
-              setIsMyTurn(true);
-            }
-          }
-          else{
-            if(myColorRef.current == "white"){
-              setIsMyTurn(true);
-            }
-          }
+        
           setIsStarted(true);
           break;
+        case CONNECT_WATCH_USER:
+            console.log("CONNECT_WATCH_USER : ", message)
+          
+            chess.load(message.fen_string)
+            setIncomingMove(message.last_move); //incoming from ws server
+            setBoard(chess.board());
+            setCurrTurn(message.next_turn_player_color)
+            setIsStarted(true);
+            break;
+
+        case GAME_NOT_LIVE:
+            showToast(message.message);
+            break;
         default:
           console.log("default : ", message)
           break;
       }
     }
-  }, [socket, chess])
+  }, [socket2, chess])
 
 
   
@@ -182,25 +146,6 @@ const Game = () => {
     }
   }, [isStarted, userName]);
 
-  useEffect(() => {
-
-      if(socket && myColorRef.current == "white" && player1TimeConsumed >= GAME_TIME_MS){
-        setIsStarted(false);
-        setIsGameOver(true);
-        socket.send(
-          JSON.stringify({type: GAME_OVER, looser_color: myColorRef.current})
-        )
-      }
-      else if(socket && myColorRef.current == "black" && player2TimeConsumed >= GAME_TIME_MS){
-        setIsStarted(false);
-        setIsGameOver(true);
-        socket.send(
-          JSON.stringify({type: GAME_OVER, looser_color: myColorRef.current})
-        )
-      }
-
-  }, [player1TimeConsumed, player2TimeConsumed])
-
   const getTimer = (timeConsumed: number, timeUser: string) => {
     const timeLeftMs = GAME_TIME_MS - timeConsumed;
     const minutes = Math.floor(timeLeftMs / (1000 * 60));
@@ -215,9 +160,7 @@ const Game = () => {
     );
   };
 
-  if(!socket) return <div>Connecting...</div>
-
-
+  if(!socket2) return <div>Connecting...</div>
 
 
   return (
@@ -233,20 +176,18 @@ const Game = () => {
 
 
           <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-            {getTimer(myColorRef.current == "white"
-                ? player2TimeConsumed
-                : player1TimeConsumed, "Opponant's"
-            )}
-            <p> {isMyTurn ? "Turn : You" : "Turn : Opponant"} </p>  
+            {
+                getTimer(player2TimeConsumed, "black")
+            }
+            <p> {`Turn : ${currTurn}`} </p>  
           </div>
         
-          <ChessBoard board={board} socket={socket} isMyTurn={isMyTurn} setIsMyTurn={setIsMyTurn} incomingMove={incomingMove} myColorRef={myColorRef.current} /> 
+          <ChessBoard2 board={board} incomingMove={incomingMove} /> 
 
           <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-            {getTimer(myColorRef.current == "black"
-                ? player2TimeConsumed
-                : player1TimeConsumed, ""
-            )}
+            {
+                getTimer(player1TimeConsumed, "white")
+            }
           </div>
           
           
@@ -254,22 +195,18 @@ const Game = () => {
         <div className='col-span-2 bg-slate-800  flex justify-center h-[90vh] overflow-y-auto'>
           <div className='pt-10'>
 
-          
-          {!isStarted && !isConnected && <Button className="py-4 px-6" onClick={()=>{
-            socket.send(JSON.stringify({
-              type:INIT_GAME
+
+          {!isStarted && <Button className="py-4 px-6" onClick={()=>{
+            socket2.send(JSON.stringify({
+              type:CONNECT_WATCH_USER,
+              gameid: gameid
             }))
             setIsConnected(true);
           }} >
-                Play 
+                Watch Live Game 
           </Button> }
 
-          {!isStarted && isConnected && <div className="py-4 px-6"  >
-               <p className='text-white'> Waiting form other user to connect ... </p>
-          </div> }
-
-
-          {!isGameOver && !isConnected &&  <Button className="py-4 px-6" onClick={()=>{
+          {!isGameOver &&  <Button className="py-4 px-6" onClick={()=>{
             navigate("/")
           }} >
                 Home 
@@ -299,4 +236,4 @@ const Game = () => {
   )
 }
 
-export default Game
+export default GameWatch

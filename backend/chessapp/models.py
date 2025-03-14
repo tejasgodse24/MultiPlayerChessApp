@@ -7,6 +7,8 @@ class GameDB(models.Model):
     black_player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="black_player2")
     status = models.CharField(max_length=100)
     fen_string = models.CharField(max_length=90, default="")
+    white_player1_remaining_time = models.PositiveIntegerField(default=0)
+    black_player2_remaining_time = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

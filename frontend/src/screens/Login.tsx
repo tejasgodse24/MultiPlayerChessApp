@@ -9,8 +9,6 @@ const Login = () => {
     const navigate = useNavigate();
 
     const reachGoogle = () => {
-        // const clientID = encodeURIComponent("22097740984-mj9hc7l6ivgr7kr5v9111699094mck84.apps.googleusercontent.com");
-        // const callBackURI = encodeURIComponent("http://localhost:5173/");
         const clientID = import.meta.env.VITE_GOOGLE_LOGIN_CLIENT_ID
         const callBackURI = import.meta.env.VITE_SOCIAL_LOGIN_CALLBACK_URI;
         console.log(clientID, callBackURI);

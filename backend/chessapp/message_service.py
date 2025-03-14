@@ -10,5 +10,4 @@ def send_direct_message(sender, reciever, msg_type, payload):
                 "type": msg_type, 
                 "payload":payload
             }
-            
         )

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getToken } from '../services/localStorageService'
 import { useNavigate } from 'react-router-dom'
+import { RELOAD_BOARD } from '../screens/Game'
 const WS_URL = "ws://localhost:8000"
 
 export const useSocket = ()=> {
@@ -15,6 +16,9 @@ export const useSocket = ()=> {
         ws.onopen = ()=>{
             console.log("websocket is connected")
             setSocket(ws);
+
+            ws.send(JSON.stringify({ type: RELOAD_BOARD }));
+            
         }
         ws.onclose = ()=>{
             setSocket(null);
@@ -23,9 +27,6 @@ export const useSocket = ()=> {
         ws.onerror = ()=>{
             navigate("/")
         }
-        // return ()=>{
-        //     ws.close();
-        // }
     }, [])
     return socket
 }

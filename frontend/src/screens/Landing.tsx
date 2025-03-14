@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import chessBoard from "../assets/chessboard.jpeg";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
@@ -6,8 +6,7 @@ import queryString from "query-string";
 import authService from "../services/authService";
 import { getToken, storeToken } from "../services/localStorageService";
 import { useDispatch } from "react-redux";
-import { setUserTokens } from "../features/auth/authSlice";
-import showToast from "../services/toastService";
+import { setUserTokens, setUserName } from "../features/auth/authSlice";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -26,7 +25,7 @@ const Landing = () => {
 
       if (response.status === "true") {
         console.log("Login successful!", response);
-
+        console.log(response)
         storeToken({
           access: response.access_token,
           refresh: response.refresh_token,
@@ -36,7 +35,7 @@ const Landing = () => {
           setUserTokens({
             access_token: response.access_token,
             refresh_token: response.refresh_token,
-            username : ""
+            username : response.username
           })
         );
 
@@ -59,6 +58,11 @@ const Landing = () => {
           const res = await authService.verifyToken({code: access});
           if(res.status == "true"){
             setIsLoggedIn(true);
+            dispatch(
+              setUserName({
+                username : res.username
+              })
+            );
           }
           else{
             navigate("/login")
@@ -84,10 +88,10 @@ const Landing = () => {
           <div className="pt-16">
             <div className="flex justify-center">
               <h1 className="text-4xl text-white font-medium">
-                Play Chess online
+                Play Chess Online
               </h1>
             </div>
-            <div className="mt-4 flex justify-evenly p-2">
+            <div className="mt-4 flex justify-evenly p-2 gap-4">
               {isLoggedIn ? (
                 <Button className="py-4 px-6" onClick={() => { navigate("/game");}}>
                   Play Online
@@ -97,6 +101,10 @@ const Landing = () => {
                   Login
                 </Button>
               )}
+
+                <Button className="py-4 px-6" onClick={() => { navigate("/listgames");}}>
+                  Watch Ongoing Games
+                </Button> 
             </div>
           </div>
         </div>

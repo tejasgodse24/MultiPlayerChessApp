@@ -1,5 +1,4 @@
-import React from 'react'
-import { Bounce, toast, ToastContainer } from 'react-toastify'
+import { Bounce, ToastContainer } from 'react-toastify'
 
 const Popup = () => {
 
