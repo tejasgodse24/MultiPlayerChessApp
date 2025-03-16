@@ -19,6 +19,9 @@ export const RELOAD_BOARD = "reload_board"
 export const TIME_RELOAD = "time_reload"
 export const USER_CONNECTED = "user_connected"
 
+export const BOT_INIT_GAME = "bot_init_game"
+export const BOT_MOVE = "bot_move"
+
 const GAME_TIME_MS = 10 * 60 * 1000;
 // const GAME_TIME_MS = 1 * 60 * 1000;
 
@@ -45,13 +48,20 @@ const Game = () => {
 
   const [userName, setUserName] = useState<string>(useSelector((state:any) => state.auth.username))
 
+  const [isGameTimed, setIsGameTimed] = useState(false);
   const [player1TimeConsumed, setPlayer1TimeConsumed] = useState(0);
   const [player2TimeConsumed, setPlayer2TimeConsumed] = useState(0);
+
+  const [includeTime, setIncludeTime] = useState(false);
+  // const [isBotGame, setIsBotGame] = useState(false);
+  const isBotGameRef = useRef(false);
+
 
   const navigate = useNavigate();
 
   useEffect(()=>{
     if(!socket){
+      console.log("socket is not there")
       return
     }
     
@@ -64,7 +74,7 @@ const Game = () => {
           break;
         case INIT_GAME:
           showToast("Game Initialized");
-          console.log(message.white, userName, message.black)
+          console.log("INIT_GAME : ", message)
           if(message.white == userName){
             showToast(`Your Color is white`);
             
@@ -78,6 +88,11 @@ const Game = () => {
           }
           setBoard(chess.board());
           setIsStarted(true);
+
+          if(message.is_game_timed == true){
+            setIsGameTimed(true)
+          }
+          
           
           break;
         case MOVE:
@@ -97,8 +112,18 @@ const Game = () => {
             setMoveStack((prevMove:any) => [...prevMove, `${message.move_player_name} : ${move}`]);
             console.log(moveStack);
 
-            setPlayer1TimeConsumed(message.player1_time_consumed);
-            setPlayer2TimeConsumed(message.player2_time_consumed);
+            if(isGameTimed == true){
+              setPlayer1TimeConsumed(message.player1_time_consumed);
+              setPlayer2TimeConsumed(message.player2_time_consumed);
+            }
+
+            console.log("isBotGame :: ", isBotGameRef.current)
+            if(isBotGameRef.current){
+            console.log("inside isBotGame :: ")
+              socket.send(
+                JSON.stringify({type: BOT_MOVE})
+              )
+            }
 
             break;
         case GAME_OVER:
@@ -142,8 +167,12 @@ const Game = () => {
 
         case TIME_RELOAD:
           console.log("time reload : ", message)
-          setPlayer1TimeConsumed(message.player1_time_consumed);
-          setPlayer2TimeConsumed(message.player2_time_consumed);
+
+          if(isGameTimed == true){
+            setPlayer1TimeConsumed(message.player1_time_consumed);
+            setPlayer2TimeConsumed(message.player2_time_consumed);
+          }
+
           if(message.last_move_player_color == "white"){
             if(myColorRef.current == "black"){
               setIsMyTurn(true);
@@ -156,6 +185,60 @@ const Game = () => {
           }
           setIsStarted(true);
           break;
+        case BOT_INIT_GAME:
+          showToast("Bot Game Initialized");
+          console.log("INIT_GAME : ", message)
+          if(message.white == userName){
+            showToast(`Your Color is white`);
+            
+            myColorRef.current = "white";
+            setIsMyTurn(true);
+          }
+          else{
+            showToast(`Your Color is black`);
+          
+            myColorRef.current = "black";
+          }
+          setBoard(chess.board());
+          setIsStarted(true);
+          // setIsBotGame(true);
+          isBotGameRef.current = true
+
+          if(message.is_game_timed == true){
+            setIsGameTimed(true)
+          }
+          
+          break;
+        case BOT_MOVE:
+          let b_move = message.move;
+          chess.move(b_move);
+          setIncomingMove(b_move);  //incoming from ws server
+          setBoard(chess.board()); 
+          console.log("next_turn_player_color", myColorRef.current, message.next_turn_player_color)
+          if(message.next_turn_player_color == myColorRef.current){
+            setIsMyTurn(true)
+          }
+          else{
+            setIsMyTurn(false);
+          }
+          
+          
+          setMoveStack((prevMove:any) => [...prevMove, `${message.move_player_name} : ${b_move}`]);
+          console.log(moveStack);
+
+          if(isGameTimed == true){
+            setPlayer1TimeConsumed(message.player1_time_consumed);
+            setPlayer2TimeConsumed(message.player2_time_consumed);
+          }
+          // console.log("isBotGame :: ", isBotGameRef.current)
+          // if(isBotGameRef.current){
+          // console.log("inside isBotGame :: ")
+          //   socket.send(
+          //     JSON.stringify({type: BOT_MOVE})
+          //   )
+          // }
+
+          break;
         default:
           console.log("default : ", message)
           break;
@@ -166,7 +249,7 @@ const Game = () => {
 
   
   useEffect(() => {
-    if (isStarted) {
+    if (isStarted && isGameTimed) {
       const interval = setInterval(() => {
         if (chess.turn() === 'w') {
           setPlayer1TimeConsumed((p) => p + 100);
@@ -231,49 +314,86 @@ const Game = () => {
       <div className='grid grid-cols-6 gap-4 w-full'>
         <div className='col-span-4 w-full flex-col flex justify-center items-center'>
 
-
-          <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-            {getTimer(myColorRef.current == "white"
-                ? player2TimeConsumed
-                : player1TimeConsumed, "Opponant's"
-            )}
-            <p> {isMyTurn ? "Turn : You" : "Turn : Opponant"} </p>  
+          {
+            isStarted && 
+            <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
+              {isGameTimed && getTimer(myColorRef.current == "white"
+                  ? player2TimeConsumed
+                  : player1TimeConsumed, "Opponant's"
+              )}
+              <p> {isMyTurn ? "Turn : You" : "Turn : Opponant"} </p>  
           </div>
+          }
+          
         
-          <ChessBoard board={board} socket={socket} isMyTurn={isMyTurn} setIsMyTurn={setIsMyTurn} incomingMove={incomingMove} myColorRef={myColorRef.current} /> 
-
-          <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-            {getTimer(myColorRef.current == "black"
-                ? player2TimeConsumed
-                : player1TimeConsumed, ""
-            )}
+          <ChessBoard board={board} socket={socket} isMyTurn={isMyTurn} incomingMove={incomingMove} myColorRef={myColorRef.current} /> 
+          
+          {
+            isStarted && 
+            <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
+              {isGameTimed && getTimer(myColorRef.current == "black"
+                  ? player2TimeConsumed
+                  : player1TimeConsumed, ""
+              )}
           </div>
+          }
+          
           
           
         </div>
         <div className='col-span-2 bg-slate-800  flex justify-center h-[90vh] overflow-y-auto'>
           <div className='pt-10'>
-
+            {
+              !isStarted && 
+              <div className="flex justify-center items-center text-white mb-4">
+                <input
+                  type="checkbox"
+                  id="includeTime"
+                  checked={includeTime}
+                  onChange={() => setIncludeTime(!includeTime)}
+                  className="mr-2"
+                />
+                <label htmlFor="includeTime">Include Time Limit</label>
+              </div>
+            }
           
-          {!isStarted && !isConnected && <Button className="py-4 px-6" onClick={()=>{
+            <div className='flex flex-col gap-4'>
+          
+          {!isStarted && !isConnected && <Button className="py-3 px-2 text-lg" onClick={()=>{
             socket.send(JSON.stringify({
-              type:INIT_GAME
+              type:INIT_GAME,
+              "is_game_timed": includeTime
             }))
             setIsConnected(true);
           }} >
-                Play 
+                Play Online
           </Button> }
+
+
+          {!isStarted && !isConnected && <Button className="py-3 px-2 text-lg" onClick={()=>{
+            socket.send(JSON.stringify({
+              type:BOT_INIT_GAME,
+              "is_game_timed": false
+            }))
+            setIsConnected(true);
+          }} >
+                Play Bots
+          </Button> }
+
 
           {!isStarted && isConnected && <div className="py-4 px-6"  >
                <p className='text-white'> Waiting form other user to connect ... </p>
           </div> }
 
 
-          {!isGameOver && !isConnected &&  <Button className="py-4 px-6" onClick={()=>{
+          {!isGameOver && !isConnected &&  <Button className="py-3 px-2 text-lg" onClick={()=>{
             navigate("/")
           }} >
                 Home 
           </Button> }
+
+
+          </div>
 
           </div>
           {

@@ -2,7 +2,7 @@ import { Color, PieceSymbol, Square } from 'chess.js';
 import React, { useState } from 'react'
 import { MOVE } from '../screens/Game';
 
-const ChessBoard = ({board , socket, isMyTurn, setIsMyTurn, incomingMove, myColorRef} : {
+const ChessBoard = ({board , socket, isMyTurn, incomingMove, myColorRef} : {
     board: ({
         square: Square;
         type: PieceSymbol;
@@ -10,7 +10,6 @@ const ChessBoard = ({board , socket, isMyTurn, setIsMyTurn, incomingMove, myColo
     } | null )[][];
     socket: WebSocket;
     isMyTurn:any;
-    setIsMyTurn:any;
     incomingMove?: string;
     myColorRef:string;
 }) => {

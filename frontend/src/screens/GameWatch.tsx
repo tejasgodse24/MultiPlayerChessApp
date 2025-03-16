@@ -46,6 +46,7 @@ const GameWatch = () => {
 
   const [userName, setUserName] = useState<string>(useSelector((state:any) => state.auth.username))
 
+  const [isGameTimed, setIsGameTimed] = useState(false);
   const [player1TimeConsumed, setPlayer1TimeConsumed] = useState(0);
   const [player2TimeConsumed, setPlayer2TimeConsumed] = useState(0);
 
@@ -115,6 +116,11 @@ const GameWatch = () => {
             setBoard(chess.board());
             setCurrTurn(message.next_turn_player_color)
             setIsStarted(true);
+
+            if(message.is_game_timed == true){
+              setIsGameTimed(true)
+            }
+
             break;
 
         case GAME_NOT_LIVE:
@@ -130,7 +136,7 @@ const GameWatch = () => {
 
   
   useEffect(() => {
-    if (isStarted) {
+    if (isStarted && isGameTimed) {
       const interval = setInterval(() => {
         if (chess.turn() === 'w') {
           setPlayer1TimeConsumed((p) => p + 100);
@@ -177,7 +183,7 @@ const GameWatch = () => {
 
           <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
             {
-                getTimer(player2TimeConsumed, "black")
+              isGameTimed &&  getTimer(player2TimeConsumed, "black")
             }
             <p> {`Turn : ${currTurn}`} </p>  
           </div>
@@ -186,7 +192,7 @@ const GameWatch = () => {
 
           <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
             {
-                getTimer(player1TimeConsumed, "white")
+              isGameTimed && getTimer(player1TimeConsumed, "white")
             }
           </div>
           

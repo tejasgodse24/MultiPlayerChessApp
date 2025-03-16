@@ -80,7 +80,7 @@ const Landing = () => {
 
   return (
     <div className="flex justify-center">
-      <div className="pt-8 max-w-screen-md">
+      <div className="pt-8 max-w-screen-lg">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex justify-center">
             <img className="max-w-96" src={chessBoard} alt="" />
@@ -93,16 +93,16 @@ const Landing = () => {
             </div>
             <div className="mt-4 flex justify-evenly p-2 gap-4">
               {isLoggedIn ? (
-                <Button className="py-4 px-6" onClick={() => { navigate("/game");}}>
-                  Play Online
+                <Button className="py-4 px-6 text-xl" onClick={() => { navigate("/game");}}>
+                  Play
                 </Button>
               ) : (
-                <Button className="py-4 px-6" onClick={() => { navigate("/login"); }}>
+                <Button className="py-4 px-6 text-xl" onClick={() => { navigate("/login"); }}>
                   Login
                 </Button>
               )}
 
-                <Button className="py-4 px-6" onClick={() => { navigate("/listgames");}}>
+                <Button className="py-4 px-6 text-xl" onClick={() => { navigate("/listgames");}}>
                   Watch Ongoing Games
                 </Button> 
             </div>

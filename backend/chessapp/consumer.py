@@ -80,4 +80,8 @@ class ChessConsumer(WebsocketConsumer):
     def connect_watch_user(self, event):
         self.send(text_data=json.dumps(event["payload"]))
 
-        
+    def bot_init_game(self, event):
+        self.send(text_data=json.dumps(event["payload"]))
+
+    def bot_move(self, event):
+        self.send(text_data=json.dumps(event["payload"]))

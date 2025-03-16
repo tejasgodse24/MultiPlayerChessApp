@@ -1,5 +1,6 @@
 
 from chessapp.game import Game
+from chessapp.game_bot import GameBot
 from chessapp.messages import * 
 from datetime import datetime
 from datetime import timedelta
@@ -8,9 +9,11 @@ from chessapp.message_service import *
 class GameManager:
     def __init__(self) -> None:
         self.games = []
+        self.bot_games = []
         self.pending_user = None
         self.users = []
         self.watch_users = []
+        self.bot_game_users = []
 
 
     def print_all(self):
@@ -28,7 +31,9 @@ class GameManager:
     def add_user(self, socket):
         if socket.user in self.users:
             # print("user exists")
-            game = [g for g in self.games if g.player1.user == socket.user or g.player2.user == socket.user]
+            # game = [g for g in self.games if g.player1.user == socket.user or g.player2.user == socket.user]
+            game = [g for g in self.games if (g.gamedb_obj.is_bot_mode == True and g.player1 == socket) or (g.gamedb_obj.is_bot_mode == False and (g.player1 == socket or g.player2 == socket))]
+
             if game:
                 # print("game also exists")
                 game = game[0]
@@ -58,7 +63,10 @@ class GameManager:
 
 
     def remove_user(self, socket):
-        game = [g for g in self.games if g.player1 == socket or g.player2 == socket]
+        # game = [g for g in self.games if g.player1 == socket or g.player2 == socket]
+        # game = [g for g in self.games if g.player1 == socket or (True if g.player2 is None else g.player2 == socket) ]
+        game = [g for g in self.games if (g.gamedb_obj.is_bot_mode == True and g.player1 == socket) or (g.gamedb_obj.is_bot_mode == False and (g.player1 == socket or g.player2 == socket))]
+
         if game:
             game = game[0]
             print('user with game disconnected..', game)
@@ -72,7 +80,7 @@ class GameManager:
             if self.pending_user:
                 if self.pending_user.user == socket.user:
                     return
-                game = Game(self.pending_user, socket)
+                game = Game(self.pending_user, socket, message)
                 self.games.append(game)
                 self.pending_user = None
             else:
@@ -80,12 +88,16 @@ class GameManager:
 
         elif message["type"] == MOVE:
             print(len(self.games))
-            game = [g for g in self.games if g.player1 == socket or g.player2 == socket][0]
+            # game = [g for g in self.games if g.player1 == socket or g.player2 == socket][0]
+            # game = [g for g in self.games if g.player1 == socket or (True if g.player2 is None else g.player2 == socket)][0]
+            game = [g for g in self.games if (g.gamedb_obj.is_bot_mode == True and g.player1 == socket) or (g.gamedb_obj.is_bot_mode == False and (g.player1 == socket or g.player2 == socket))][0]
             if game:
                 game.make_move(socket, message["move"])
 
         elif message["type"] == GAME_OVER:  #game over from client side (due to time over )
-            game = [g for g in self.games if g.player1 == socket or g.player2 == socket]
+            # game = [g for g in self.games if g.player1 == socket or g.player2 == socket]
+            game = [g for g in self.games if (g.gamedb_obj.is_bot_mode == True and g.player1 == socket) or (g.gamedb_obj.is_bot_mode == False and (g.player1 == socket or g.player2 == socket))]
+
             if len(game) > 0:
                 game = game[0]
                 game.time_over(socket, message["looser_color"])
@@ -104,7 +116,8 @@ class GameManager:
                 elif game.player2 == socket:
                     print("already playing game player2")
                 else:
-                    self.watch_users.append(socket)
+                    self.watch_users.append(socket.user)
+                    self.users.remove(socket.user)
                     game.add_watch_user(socket)
             else:
                 print("Game is not going live")
@@ -120,7 +133,9 @@ class GameManager:
         elif message["type"] == RELOAD_BOARD: 
             if socket.user in self.users:
                 print("user exists")
-                game = [g for g in self.games if g.player1.user == socket.user or g.player2.user == socket.user]
+                # game = [g for g in self.games if g.player1.user == socket.user or g.player2.user == socket.user]
+                game = [g for g in self.games if (g.gamedb_obj.is_bot_mode == True and g.player1 == socket) or (g.gamedb_obj.is_bot_mode == False and (g.player1 == socket or g.player2 == socket))]
+
                 if game:
                     print("game also exists")
                     game = game[0]
@@ -136,7 +151,21 @@ class GameManager:
                     print("user exists but game not exists")
             else:
                 print("user not exists")
+        elif message["type"] == BOT_INIT_GAME:
+            game = GameBot(socket, message)  #player2 = None
 
+            self.games.append(game)
+            # self.bot_games.append(game)
+            self.pending_user = None
+
+            self.bot_game_users.append(socket.user)
+            self.users.remove(socket.user)
+        elif message["type"] == BOT_MOVE:
+            print(len(self.games))
+            game = [g for g in self.games if g.player1 == socket][0]
+            if game:
+                game.bot_move()
+            
         self.print_all()
 
 

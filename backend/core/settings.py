@@ -185,3 +185,7 @@ REST_AUTH = {
     'OLD_PASSWORD_FIELD_ENABLED': True,
 }
 
+# Chess Game Engine Path
+CHESS_ENGINE_PATH = r"C:/Users/HP/Desktop/chess_game_engine/stockfish-windows-x86-64-avx2/stockfish/stockfish-windows-x86-64-avx2.exe"  # Example: "C:/Users/Tejas/Downloads/stockfish/stockfish.exe"
+
+
