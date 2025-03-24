@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     'chessapp',
     'accounts',
 
+    # libs
+    'django_extensions',
+
     # corsheader
     "corsheaders",
 	# rest-framework
