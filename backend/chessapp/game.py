@@ -5,6 +5,7 @@ from chessapp.message_service import send_direct_message
 from asgiref.sync import async_to_sync
 from chessapp.models import GameDB, Move
 from datetime import timedelta
+from channels.db import database_sync_to_async
 
 
 class Game:
@@ -13,14 +14,17 @@ class Game:
         self.player2 = player2
         self.board = chess.Board()
         self.start_time = datetime.now()
-        self.gamedb_obj = GameDB.objects.create(
-                            white_player1 = player1.user, 
-                            black_player2 = player2.user, 
-                            status = "IN_PROGRESS", 
-                            fen_string = self.board.fen(), 
-                            white_player1_remaining_time = 100, 
-                            black_player2_remaining_time = 100
-                        )
+
+        self.gamedb_obj = None
+
+        # self.gamedb_obj = GameDB.objects.create(
+        #                     white_player1 = player1.user, 
+        #                     black_player2 = player2.user, 
+        #                     status = "IN_PROGRESS", 
+        #                     fen_string = self.board.fen(), 
+        #                     white_player1_remaining_time = 100, 
+        #                     black_player2_remaining_time = 100
+        #                 )
         self.fen_string = self.board.fen()
         self.last_move_player_name = ""
         self.last_move = ""
@@ -30,28 +34,87 @@ class Game:
         self.player2_time_consumed = 0
         self.is_game_timed = message["is_game_timed"] 
 
-        player1.room_name = str(self.gamedb_obj.gameid)
-        player1.room_group_name = f"rm_grp_{str(self.gamedb_obj.gameid)}"
-        async_to_sync(player1.channel_layer.group_add)(player1.room_group_name, player1.channel_name)
+        # player1.room_name = str(self.gamedb_obj.gameid)
+        # player1.room_group_name = f"rm_grp_{str(self.gamedb_obj.gameid)}"
+        # async_to_sync(player1.channel_layer.group_add)(player1.room_group_name, player1.channel_name)
 
-        player2.room_name = str(self.gamedb_obj.gameid)
-        player2.room_group_name = f"rm_grp_{str(self.gamedb_obj.gameid)}"
-        async_to_sync(player2.channel_layer.group_add)(player2.room_group_name, player2.channel_name)
+        # player2.room_name = str(self.gamedb_obj.gameid)
+        # player2.room_group_name = f"rm_grp_{str(self.gamedb_obj.gameid)}"
+        # async_to_sync(player2.channel_layer.group_add)(player2.room_group_name, player2.channel_name)
 
-        async_to_sync(player2.channel_layer.group_send)(
-            player2.room_group_name,
+        # async_to_sync(player2.channel_layer.group_send)(
+        #     player2.room_group_name,
+        #     {
+        #         "type": INIT_GAME, 
+        #         "payload":{
+        #             "type": INIT_GAME, 
+        #             "white": player1.user.email, 
+        #             "black": player2.user.email,
+        #             "is_game_timed": self.is_game_timed 
+        #         } 
+        #     }
+        # )
+    
+    @classmethod
+    async def create(cls, player1, player2, message):
+        """
+        Async factory method to create a Game instance and run async setup.
+        """
+        instance = cls(player1, player2, message)
+        await instance.setup_game()
+        return instance
+
+    async def setup_game(self):
+        """
+        Perform asynchronous setup:
+          - Create game record in the database.
+          - Assign room names.
+          - Add players to channel groups.
+          - Send initial game setup message.
+        """
+        # Create DB record asynchronously
+        self.gamedb_obj = await self.create_game_db_record()
+
+        # Setup room names based on game ID
+        game_id_str = str(self.gamedb_obj.gameid)
+        self.player1.room_name = game_id_str
+        self.player1.room_group_name = f"rm_grp_{game_id_str}"
+        self.player2.room_name = game_id_str
+        self.player2.room_group_name = f"rm_grp_{game_id_str}"
+
+        # Add players to their channel groups asynchronously
+        await self.player1.channel_layer.group_add(self.player1.room_group_name, self.player1.channel_name)
+        await self.player2.channel_layer.group_add(self.player2.room_group_name, self.player2.channel_name)
+
+        # Send an initial game setup message (INIT_GAME) to player2's group
+        await self.player2.channel_layer.group_send(
+            self.player2.room_group_name,
             {
-                "type": INIT_GAME, 
-                "payload":{
-                    "type": INIT_GAME, 
-                    "white": player1.user.email, 
-                    "black": player2.user.email,
-                    "is_game_timed": self.is_game_timed 
-                } 
+                "type": INIT_GAME,
+                "payload": {
+                    "type": INIT_GAME,
+                    "white": self.player1.user.email,
+                    "black": self.player2.user.email,
+                    "is_game_timed": self.is_game_timed,
+                }
             }
         )
-        
-    def reload_board_position(self, socket):
+
+    @database_sync_to_async
+    def create_game_db_record(self):
+        """
+        Wraps the synchronous DB operation to create a game record.
+        """
+        return GameDB.objects.create(
+            white_player1=self.player1.user,
+            black_player2=self.player2.user,
+            status="IN_PROGRESS",
+            fen_string=self.board.fen(),
+            white_player1_remaining_time=100,
+            black_player2_remaining_time=100
+        )
+
+    async def reload_board_position(self, socket):
         print("reload game : ", socket.user)
 
         # -----------------------------------------------------------------------------------------------
@@ -79,7 +142,7 @@ class Game:
         print("relaod-game-values")
         print(self.gamedb_obj.fen_string, self.last_move, "white" if socket == self.player1 else "black", "white" if self.last_move_player_name == self.player1.user.username else "black", self.player1_time_consumed, self.player2_time_consumed)
         
-        send_direct_message(
+        await send_direct_message(
             socket, 
             socket, 
             RELOAD_BOARD, 
@@ -93,13 +156,15 @@ class Game:
         )
         socket.room_name = str(self.gamedb_obj.gameid)
         socket.room_group_name = f"rm_grp_{str(self.gamedb_obj.gameid)}"
-        async_to_sync(socket.channel_layer.group_add)(socket.room_group_name, socket.channel_name)
+        # async_to_sync(socket.channel_layer.group_add)(socket.room_group_name, socket.channel_name)
+        await socket.channel_layer.group_add(socket.room_group_name, socket.channel_name)
+
 
         # ------------------------------------------------------------------------------------
 
         if len(self.board.move_stack) % 2 == 0:    # means player2 just made the move
            
-            async_to_sync(socket.channel_layer.group_send)(
+            await socket.channel_layer.group_send(
                 socket.room_group_name,
                 {
                     "type": TIME_RELOAD, 
@@ -114,7 +179,7 @@ class Game:
         else:
             print("player1 made move")
 
-            async_to_sync(socket.channel_layer.group_send)(
+            await socket.channel_layer.group_send(
                 socket.room_group_name,
                 {
                     "type": TIME_RELOAD, 
@@ -129,7 +194,7 @@ class Game:
 
 
 
-    def make_move(self, socket, move):
+    async def make_move(self, socket, move):
         print("move",move)
 
         # -----------------------------------------------------------------------------------------------
@@ -174,8 +239,7 @@ class Game:
             # send message that game is over to both players
             print("game over")
             
-            self.gamedb_obj.status = "COMPLETED"
-            self.gamedb_obj.save()
+            await self.game_over_db_operation()
 
             outcome = self.board.outcome()
             
@@ -187,7 +251,7 @@ class Game:
                 winner = "Draw"
 
 
-            async_to_sync(socket.channel_layer.group_send)(
+            await socket.channel_layer.group_send(
                 socket.room_group_name,
                 {
                     "type": GAME_OVER, 
@@ -232,10 +296,25 @@ class Game:
         if len(self.board.move_stack) % 2 == 0:    # means player2 just made the move
             print("player2 made move")
 
-            async_to_sync(socket.channel_layer.group_send)(
+            # async_to_sync(socket.channel_layer.group_send)(
+            #     socket.room_group_name,
+            #     {
+            #         "type": MOVE, 
+            #         "payload": {
+            #             "type": MOVE, 
+            #             "move": move, 
+            #             "move_player_name":self.last_move_player_name,  
+            #             "move_player_color":"black",
+            #             "next_turn_player_color" : "white",
+            #             "player1_time_consumed": self.player1_time_consumed,
+            #             "player2_time_consumed": self.player2_time_consumed
+            #         }
+            #     }
+            # )
+            await socket.channel_layer.group_send(
                 socket.room_group_name,
                 {
-                    "type": MOVE, 
+                    "type": MOVE,
                     "payload": {
                         "type": MOVE, 
                         "move": move, 
@@ -250,10 +329,25 @@ class Game:
         else:
             print("player1 made move")
 
-            async_to_sync(socket.channel_layer.group_send)(
+            # async_to_sync(socket.channel_layer.group_send)(
+            #     socket.room_group_name,
+            #     {
+            #         "type": MOVE, 
+            #         "payload": {
+            #             "type": MOVE, 
+            #             "move": move, 
+            #             "move_player_name":self.last_move_player_name, 
+            #             "move_player_color":"white",
+            #             "next_turn_player_color" : "black",
+            #             "player1_time_consumed": self.player1_time_consumed,
+            #             "player2_time_consumed": self.player2_time_consumed
+            #         }
+            #     }
+            # )
+            await socket.channel_layer.group_send(
                 socket.room_group_name,
                 {
-                    "type": MOVE, 
+                    "type": MOVE,
                     "payload": {
                         "type": MOVE, 
                         "move": move, 
@@ -266,18 +360,24 @@ class Game:
                 }
             )
         # -----------------------------------------------------------------------------------------------
+        await self.save_game_state(move)
 
 
 
+
+    @database_sync_to_async
+    def game_over_db_operation(self):
+        self.gamedb_obj.status = "COMPLETED"
+        self.gamedb_obj.save()
+
+    @database_sync_to_async
+    def save_game_state(self, move):
         # -----------------------------------------------------------------------------------------------
         # save fen string of current position and remaining times also
 
         self.gamedb_obj.fen_string = self.board.fen()
         self.fen_string = self.board.fen()
         self.gamedb_obj.save()
-        # -----------------------------------------------------------------------------------------------
-
-
         # -----------------------------------------------------------------------------------------------
         # create current move in db
 
@@ -291,17 +391,15 @@ class Game:
         #set last move
         self.last_move = move
         # -----------------------------------------------------------------------------------------------
-
         print("board")
         print(self.board)
-    
-    def time_over(self, socket, color):
+
+
+
+
+    async def time_over(self, socket, color):
 
         print("game over : time over")
-        
-        self.gamedb_obj.status = "COMPLETED"
-        self.gamedb_obj.save()
-
         if color == "white":
             winner = "Black"
         elif color == "black":
@@ -311,7 +409,14 @@ class Game:
 
         print("game over : sending msg")
 
-        async_to_sync(socket.channel_layer.group_send)(
+        # async_to_sync(socket.channel_layer.group_send)(
+        #     socket.room_group_name,
+        #     {
+        #         "type": GAME_OVER, 
+        #         "payload": {"type": GAME_OVER, "winner" : winner} 
+        #     }
+        # )
+        await socket.channel_layer.group_send(
             socket.room_group_name,
             {
                 "type": GAME_OVER, 
@@ -319,12 +424,20 @@ class Game:
             }
         )
 
+        self.time_over_db_operation()
 
-    def add_watch_user(self, socket):
+
+    @database_sync_to_async
+    def time_over_db_operation(self):
+        self.gamedb_obj.status = "COMPLETED"
+        self.gamedb_obj.save()
+
+
+    async def add_watch_user(self, socket):
 
         print("add_watch_user ::: ")
 
-        send_direct_message(
+        await send_direct_message(
             socket, 
             socket, 
             CONNECT_WATCH_USER, 
@@ -339,8 +452,7 @@ class Game:
 
         socket.room_name = str(self.gamedb_obj.gameid)
         socket.room_group_name = f"rm_grp_{str(self.gamedb_obj.gameid)}"
-        async_to_sync(socket.channel_layer.group_add)(socket.room_group_name, socket.channel_name)
-
+        await socket.channel_layer.group_add(socket.room_group_name, socket.channel_name)
 
     
         

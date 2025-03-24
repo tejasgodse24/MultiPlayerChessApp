@@ -5,6 +5,7 @@ import Game from './screens/Game';
 import Login from './screens/Login';
 import GameWatch from './screens/GameWatch';
 import GameList from './screens/GameList';
+import GameCrash from "./screens/GameCrash";
 
 function App() {
 
@@ -17,7 +18,7 @@ function App() {
         <Route path='/game' element={<Game />} />
         <Route path='/listgames' element={<GameList />} />
         <Route path='/watchgame/:gameid' element={<GameWatch />} />
-
+        <Route path='/gamecrash' element={<GameCrash />} />
       </Routes>
       </BrowserRouter>
     </div>

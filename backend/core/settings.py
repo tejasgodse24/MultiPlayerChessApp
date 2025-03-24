@@ -1,16 +1,22 @@
 
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-rd^v(uea12ui+!=dhm+=lw+)ke8+d6xq#umgm*sayq$6fs)8xv'
+# SECRET_KEY = 'django-insecure-rd^v(uea12ui+!=dhm+=lw+)ke8+d6xq#umgm*sayq$6fs)8xv'
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -143,15 +149,19 @@ CHANNEL_LAYERS = {
 }
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://localhost:5173",
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:8000",
+#     "http://localhost:5173",
 
-]
-CSRF_TRUSTED_ORIGINS = [
-   "http://localhost:8000",
-    "http://localhost:5173",
-]
+# ]
+# CSRF_TRUSTED_ORIGINS = [
+#    "http://localhost:8000",
+#     "http://localhost:5173",
+# ]
+
+# Read values and convert them into lists
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 
 # allauth
 SITE_ID = 1
@@ -186,6 +196,5 @@ REST_AUTH = {
 }
 
 # Chess Game Engine Path
-CHESS_ENGINE_PATH = r"C:/Users/HP/Desktop/chess_game_engine/stockfish-windows-x86-64-avx2/stockfish/stockfish-windows-x86-64-avx2.exe"  # Example: "C:/Users/Tejas/Downloads/stockfish/stockfish.exe"
-
+CHESS_ENGINE_PATH = os.environ.get("CHESS_ENGINE_PATH")
 

@@ -28,7 +28,7 @@ class GameManager:
         print(f"\n pending_user ==={self.pending_user}")
 
 
-    def add_user(self, socket):
+    async def add_user(self, socket):
         if socket.user in self.users:
             # print("user exists")
             # game = [g for g in self.games if g.player1.user == socket.user or g.player2.user == socket.user]
@@ -49,7 +49,7 @@ class GameManager:
                 # print("user exists but game not exists")
                 pass
         else:
-            send_direct_message(
+            await send_direct_message(
                 socket, 
                 socket, 
                 USER_CONNECTED, 
@@ -75,12 +75,13 @@ class GameManager:
         self.print_all()
 
 
-    def add_handler(self, socket, message):
+    async def add_handler(self, socket, message):
         if message["type"] == INIT_GAME:
             if self.pending_user:
                 if self.pending_user.user == socket.user:
                     return
-                game = Game(self.pending_user, socket, message)
+                # game = Game(self.pending_user, socket, message)
+                game = await Game.create(self.pending_user, socket, message)
                 self.games.append(game)
                 self.pending_user = None
             else:
@@ -92,7 +93,7 @@ class GameManager:
             # game = [g for g in self.games if g.player1 == socket or (True if g.player2 is None else g.player2 == socket)][0]
             game = [g for g in self.games if (g.gamedb_obj.is_bot_mode == True and g.player1 == socket) or (g.gamedb_obj.is_bot_mode == False and (g.player1 == socket or g.player2 == socket))][0]
             if game:
-                game.make_move(socket, message["move"])
+                await game.make_move(socket, message["move"])
 
         elif message["type"] == GAME_OVER:  #game over from client side (due to time over )
             # game = [g for g in self.games if g.player1 == socket or g.player2 == socket]
@@ -100,7 +101,7 @@ class GameManager:
 
             if len(game) > 0:
                 game = game[0]
-                game.time_over(socket, message["looser_color"])
+                await game.time_over(socket, message["looser_color"])
                 self.users.remove(game.player1.user)
                 self.users.remove(game.player2.user)
                 self.games.remove(game)
@@ -118,10 +119,10 @@ class GameManager:
                 else:
                     self.watch_users.append(socket.user)
                     self.users.remove(socket.user)
-                    game.add_watch_user(socket)
+                    await game.add_watch_user(socket)
             else:
                 print("Game is not going live")
-                send_direct_message(
+                await send_direct_message(
                     socket, 
                     socket, 
                     GAME_NOT_LIVE, 
@@ -146,14 +147,14 @@ class GameManager:
                         game.player2 = socket
                         print("condition: 2")
 
-                    game.reload_board_position(socket)
+                    await game.reload_board_position(socket)
                 else:
                     print("user exists but game not exists")
             else:
                 print("user not exists")
         elif message["type"] == BOT_INIT_GAME:
-            game = GameBot(socket, message)  #player2 = None
-
+            # game = GameBot(socket, message)  #player2 = None
+            game = await GameBot.create(socket, message)
             self.games.append(game)
             # self.bot_games.append(game)
             self.pending_user = None
@@ -164,7 +165,14 @@ class GameManager:
             print(len(self.games))
             game = [g for g in self.games if g.player1 == socket][0]
             if game:
-                game.bot_move()
+                await game.bot_move()
+
+        elif message["type"] == REMOVE_GAME:
+            from chessapp.helpers import remove_games_with_users
+            print("REMOVE_GAME ::: ")
+            games = [g for g in self.games if g.player1 == socket or g.player2 == socket]
+            if games:
+                remove_games_with_users(games)
             
         self.print_all()
 

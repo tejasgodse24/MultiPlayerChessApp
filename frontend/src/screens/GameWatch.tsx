@@ -91,6 +91,11 @@ const GameWatch = () => {
           // setBoard(chess.board());
           // setIsStarted(false);
           setIsGameOver(true)
+
+          setTimeout(() => {
+            navigate("/")
+          }, 5000);
+          
           break;
         // case RELOAD_BOARD:
         //   console.log("reload board : ", message)

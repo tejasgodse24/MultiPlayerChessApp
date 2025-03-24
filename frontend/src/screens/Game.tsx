@@ -22,6 +22,8 @@ export const USER_CONNECTED = "user_connected"
 export const BOT_INIT_GAME = "bot_init_game"
 export const BOT_MOVE = "bot_move"
 
+export const REMOVE_GAME = "remove_game"
+
 const GAME_TIME_MS = 10 * 60 * 1000;
 // const GAME_TIME_MS = 1 * 60 * 1000;
 
@@ -62,6 +64,7 @@ const Game = () => {
   useEffect(()=>{
     if(!socket){
       console.log("socket is not there")
+      // navigate("/gamecrash")
       return
     }
     
@@ -134,6 +137,16 @@ const Game = () => {
           // setBoard(chess.board());
           // setIsStarted(false);
           setIsGameOver(true)
+
+          if(myColorRef.current = "white"){
+            socket.send(
+              JSON.stringify({type: REMOVE_GAME})
+            )
+          }
+          
+          setTimeout(() => {
+            navigate("/")
+          }, 5000);
           break;
         // case INVALID_MOVE:
         //   setIsMyTurn(true);

@@ -29,7 +29,7 @@ export class AuthService {
     const body = JSON.stringify({ code: decodeURIComponent(code) });
     try { 
       const res = await axios.post(
-        "http://localhost:8000/accounts/google/",
+        import.meta.env.VITE_GOOGLE_LOGIN_URL,
         body,
         config
       );
@@ -62,7 +62,7 @@ export class AuthService {
     const body = JSON.stringify({ token: decodeURIComponent(code) });
     try { 
       const res = await axios.post(
-        "http://localhost:8000/accounts/token/customverify/",
+        import.meta.env.VITE_VERIFY_TOKEN_URL,
         body,
         config
       );
