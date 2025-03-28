@@ -134,7 +134,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+
+STATIC_ROOT = "/var/www/chessgame/static/"
+STATIC_URL = '/static/'
+
+# localhost
+# STATIC_ROOT = os.path.join(BASE_DIR, 'public/static')
+# STATIC_URL = '/static/'
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -146,7 +154,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379, 2)],
+            "hosts": ["redis://127.0.0.1:6379/2"],
         },
     },
 }
