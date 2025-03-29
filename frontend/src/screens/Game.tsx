@@ -32,7 +32,7 @@ const GAME_TIME_MS = 10 * 60 * 1000;
 const Game = () => {
 
   const socket = useSocket();
-  const [chess, setChess] = useState(new Chess())
+  const [chess] = useState(new Chess())
   const [board, setBoard] = useState(chess.board())
   const [isConnected, setIsConnected] = useState(false)
 
@@ -40,7 +40,7 @@ const Game = () => {
   const [isGameOver, setIsGameOver] = useState(false)
 
   const [isMyTurn, setIsMyTurn] = useState(false)
-  const [isPopupOpen, setIsPopupOpen] = useState(true);
+  const [isPopupOpen] = useState(true);
 
   const myColorRef = useRef("");
 
@@ -48,7 +48,7 @@ const Game = () => {
 
   const [incomingMove, setIncomingMove] = useState<string>("")
 
-  const [userName, setUserName] = useState<string>(useSelector((state:any) => state.auth.username))
+  const [userName] = useState<string>(useSelector((state:any) => state.auth.username))
 
   const [isGameTimed, setIsGameTimed] = useState(false);
   const [player1TimeConsumed, setPlayer1TimeConsumed] = useState(0);

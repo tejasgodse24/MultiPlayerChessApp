@@ -1,5 +1,5 @@
 import { Color, PieceSymbol, Square } from 'chess.js';
-import React, { useState } from 'react'
+import  { useState } from 'react'
 import { MOVE } from '../screens/Game';
 
 const ChessBoard = ({board , socket, isMyTurn, incomingMove, myColorRef} : {
@@ -14,7 +14,7 @@ const ChessBoard = ({board , socket, isMyTurn, incomingMove, myColorRef} : {
     myColorRef:string;
 }) => {
   const [from, setFrom] = useState<null | Square>(null);
-  const [to, setTo] = useState<null | Square>(null);
+  // const [to, setTo] = useState<null | Square>(null);
 
 
   console.log(incomingMove);

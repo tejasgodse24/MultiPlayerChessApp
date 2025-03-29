@@ -6,6 +6,7 @@ import Login from './screens/Login';
 import GameWatch from './screens/GameWatch';
 import GameList from './screens/GameList';
 import GameCrash from "./screens/GameCrash";
+import Register from "./screens/Register";
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path='/' element={<Landing />} />
         <Route path='/login' element={<Login />} />
+        <Route path='/register' element={<Register />} />
         <Route path='/game' element={<Game />} />
         <Route path='/listgames' element={<GameList />} />
         <Route path='/watchgame/:gameid' element={<GameWatch />} />

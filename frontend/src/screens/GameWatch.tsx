@@ -30,21 +30,21 @@ const GAME_TIME_MS = 10 * 60 * 1000;
 const GameWatch = () => {
 
   const socket2 = useSocket();
-  const [chess, setChess] = useState(new Chess())
+  const [chess] = useState(new Chess())
   const [board, setBoard] = useState(chess.board())
-  const [isConnected, setIsConnected] = useState(false)
+  // const [isConnected, setIsConnected] = useState(false)
 
   const [isStarted, setIsStarted] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
 
-  const [isPopupOpen, setIsPopupOpen] = useState(true);
+  const [isPopupOpen] = useState(true);
 
 
   const [moveStack, setMoveStack] = useState<any[]>([]);
 
   const [incomingMove, setIncomingMove] = useState<string>("")
 
-  const [userName, setUserName] = useState<string>(useSelector((state:any) => state.auth.username))
+  const [userName] = useState<string>(useSelector((state:any) => state.auth.username))
 
   const [isGameTimed, setIsGameTimed] = useState(false);
   const [player1TimeConsumed, setPlayer1TimeConsumed] = useState(0);
@@ -67,7 +67,7 @@ const GameWatch = () => {
       console.log(message);
       switch(message.type){
         case USER_CONNECTED:
-          setIsConnected(true)
+          // setIsConnected(true)
           console.log("user connected", message.message)
           break;
         case MOVE:
@@ -212,7 +212,7 @@ const GameWatch = () => {
               type:CONNECT_WATCH_USER,
               gameid: gameid
             }))
-            setIsConnected(true);
+            // setIsConnected(true);
           }} >
                 Watch Live Game 
           </Button> }

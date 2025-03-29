@@ -4,6 +4,15 @@ interface GoogleLoginParams {
   code?: string | null;
 }
 
+interface NormalLoginRegisterParams {
+  username?: string | null;
+  email?: string | null;
+  password: string | null;
+  password1?: string | null;
+  password2?: string | null;
+}
+
+
 interface GoogleLoginResponse {
   status: "true" | "false";
   access_token?: string;
@@ -78,6 +87,71 @@ export class AuthService {
         return {status: "false", errormsg: "Unexpected error" };
       }
     }
+  }
+
+
+
+  async normalRegister({username, email, password, password1, password2 }: NormalLoginRegisterParams): Promise<any> {
+    console.log("he")
+
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    const body = JSON.stringify({ username: username, email:email, password1:password1, password2:password2 });
+    try { 
+      const res = await axios.post(
+        import.meta.env.VITE_NORMAL_REGISTER_URL,
+        body,
+        config
+      );
+      console.log(res.data)
+      return { ...res.data, status: "true" };
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error:", error.response?.data || error.message);
+        return {status: "false"};
+      } else {
+        console.error("Unexpected error:", error);
+        return {status: "false", errormsg: "Unexpected error" };
+      }
+    }
+
+
+  }
+
+
+  async normalLogin({username, email, password }: NormalLoginRegisterParams): Promise<any> {
+    console.log("he")
+
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    const body = JSON.stringify({ username: username, email:email, password:password });
+    try { 
+      const res = await axios.post(
+        import.meta.env.VITE_NORMAL_LOGIN_URL,
+        body,
+        config
+      );
+      console.log(res.data)
+      return { ...res.data, status: "true" };
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error:", error.response?.data || error.message);
+        return {status: "false"};
+      } else {
+        console.error("Unexpected error:", error);
+        return {status: "false", errormsg: "Unexpected error" };
+      }
+    }
+
+
   }
 }
 
