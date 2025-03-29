@@ -91,7 +91,7 @@ export class AuthService {
 
 
 
-  async normalRegister({username, email, password, password1, password2 }: NormalLoginRegisterParams): Promise<any> {
+  async normalRegister({username, email, password1, password2 }: NormalLoginRegisterParams): Promise<any> {
     console.log("he")
 
     const config = {

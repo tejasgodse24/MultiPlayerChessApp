@@ -15,13 +15,15 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
+from django.conf import settings
 
 User = get_user_model()
 
 class GoogleLogin(SocialLoginView): # if you want to use Authorization Code Grant, use this
     adapter_class = GoogleOAuth2Adapter
     # adapter_class = CustomGoogleOAuth2Adapter
-    callback_url = "http://localhost:5173/"
+    # callback_url = "http://localhost:5173/"
+    callback_url = settings.GOOGLE_LOGIN_CALLBACK_URL
     client_class = OAuth2Client
 
 

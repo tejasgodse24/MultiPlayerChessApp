@@ -209,3 +209,7 @@ REST_AUTH = {
 # Chess Game Engine Path
 CHESS_ENGINE_PATH = os.environ.get("CHESS_ENGINE_PATH")
 
+
+# google login callback url
+GOOGLE_LOGIN_CALLBACK_URL = os.environ.get("GOOGLE_LOGIN_CALLBACK_URL")
+

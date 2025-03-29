@@ -1,11 +1,7 @@
 import { useState } from "react";
-import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { storeToken } from "../services/localStorageService";
-import { useDispatch } from "react-redux";
-import { setUserTokens } from "../features/auth/authSlice";
-
 
 const Register = () => {
 
