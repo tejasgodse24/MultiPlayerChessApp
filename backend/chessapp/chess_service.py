@@ -1,11 +1,13 @@
 import chess
 import chess.engine
-
+from django.conf import settings
 
 def make_bot_move(board):
     print("inside make_bot_move service ::: ")
     # Replace this with the actual path to the Stockfish binary
-    engine_path = r"/usr/games/stockfish"  # Example: "C:/Users/Tejas/Downloads/stockfish/stockfish.exe"
+    # engine_path = r"/usr/games/stockfish"  # Example: "C:/Users/Tejas/Downloads/stockfish/stockfish.exe"
+    engine_path = settings.CHESS_ENGINE_PATH
+    
     print("engine_path", engine_path)
 
     print("before : ") 
