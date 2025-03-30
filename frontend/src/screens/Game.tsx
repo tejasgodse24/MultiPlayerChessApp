@@ -27,8 +27,6 @@ export const REMOVE_GAME = "remove_game"
 const GAME_TIME_MS = 10 * 60 * 1000;
 // const GAME_TIME_MS = 1 * 60 * 1000;
 
-
-
 const Game = () => {
 
   const socket = useSocket();
@@ -58,12 +56,11 @@ const Game = () => {
   // const [isBotGame, setIsBotGame] = useState(false);
   const isBotGameRef = useRef(false);
 
-
   const navigate = useNavigate();
 
   useEffect(()=>{
     if(!socket){
-      console.log("socket is not there")
+      // console.log("socket is not there")
       // navigate("/gamecrash")
       return
     }
@@ -73,11 +70,11 @@ const Game = () => {
 
       switch(message.type){
         case USER_CONNECTED:
-          console.log("user connected", message.message)
+          // console.log("user connected", message.message)
           break;
         case INIT_GAME:
           showToast("Game Initialized");
-          console.log("INIT_GAME : ", message)
+          // console.log("INIT_GAME : ", message)
           if(message.white == userName){
             showToast(`Your Color is white`);
             
@@ -103,7 +100,7 @@ const Game = () => {
             chess.move(move);
             setIncomingMove(move);  //incoming from ws server
             setBoard(chess.board()); 
-            console.log("next_turn_player_color", myColorRef.current, message.next_turn_player_color)
+            // console.log("next_turn_player_color", myColorRef.current, message.next_turn_player_color)
             if(message.next_turn_player_color == myColorRef.current){
               setIsMyTurn(true)
             }
@@ -113,16 +110,16 @@ const Game = () => {
             
             
             setMoveStack((prevMove:any) => [...prevMove, `${message.move_player_name} : ${move}`]);
-            console.log(moveStack);
+            // console.log(moveStack);
 
             if(isGameTimed == true){
               setPlayer1TimeConsumed(message.player1_time_consumed);
               setPlayer2TimeConsumed(message.player2_time_consumed);
             }
 
-            console.log("isBotGame :: ", isBotGameRef.current)
+            // console.log("isBotGame :: ", isBotGameRef.current)
             if(isBotGameRef.current){
-            console.log("inside isBotGame :: ")
+            // console.log("inside isBotGame :: ")
               socket.send(
                 JSON.stringify({type: BOT_MOVE})
               )
@@ -130,7 +127,7 @@ const Game = () => {
 
             break;
         case GAME_OVER:
-          console.log("Game Over: Game Over")
+          // console.log("Game Over: Game Over")
           showToast("Game Over");
           showToast(`Winner is ${message.winner}`);
           // setChess(new Chess());
@@ -159,7 +156,7 @@ const Game = () => {
         //   setIsMyTurn(true)
         //   break;
         case RELOAD_BOARD:
-          console.log("reload board : ", message)
+          // console.log("reload board : ", message)
           if(message.color == "white"){
             myColorRef.current = "white";
           }
@@ -171,7 +168,7 @@ const Game = () => {
           setBoard(chess.board());
 
           if(userName == message.last_move_username){
-            console.log(userName,  message.last_move_username)
+            // console.log(userName,  message.last_move_username)
           }
           else{
             setIsMyTurn(true);
@@ -179,7 +176,7 @@ const Game = () => {
           break;
 
         case TIME_RELOAD:
-          console.log("time reload : ", message)
+          // console.log("time reload : ", message)
 
           if(isGameTimed == true){
             setPlayer1TimeConsumed(message.player1_time_consumed);
@@ -200,7 +197,7 @@ const Game = () => {
           break;
         case BOT_INIT_GAME:
           showToast("Bot Game Initialized");
-          console.log("INIT_GAME : ", message)
+          // console.log("INIT_GAME : ", message)
           if(message.white == userName){
             showToast(`Your Color is white`);
             
@@ -227,7 +224,7 @@ const Game = () => {
           chess.move(b_move);
           setIncomingMove(b_move);  //incoming from ws server
           setBoard(chess.board()); 
-          console.log("next_turn_player_color", myColorRef.current, message.next_turn_player_color)
+          // console.log("next_turn_player_color", myColorRef.current, message.next_turn_player_color)
           if(message.next_turn_player_color == myColorRef.current){
             setIsMyTurn(true)
           }
@@ -237,7 +234,7 @@ const Game = () => {
           
           
           setMoveStack((prevMove:any) => [...prevMove, `${message.move_player_name} : ${b_move}`]);
-          console.log(moveStack);
+          // console.log(moveStack);
 
           if(isGameTimed == true){
             setPlayer1TimeConsumed(message.player1_time_consumed);
@@ -253,12 +250,11 @@ const Game = () => {
 
           break;
         default:
-          console.log("default : ", message)
+          // console.log("default : ", message)
           break;
       }
     }
   }, [socket, chess])
-
 
   
   useEffect(() => {
@@ -313,120 +309,92 @@ const Game = () => {
 
   if(!socket) return <div>Connecting...</div>
 
-
-
-
   return (
-    
-
     <div className='flex justify-center'>
       {isPopupOpen && (
         <Popup />
       )}
-      <div className='pt-8 max-w-screen-lg w-full'>
-      <div className='grid grid-cols-6 gap-4 w-full'>
-        <div className='col-span-4 w-full flex-col flex justify-center items-center'>
-
-          {
-            isStarted && 
-            <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-              {isGameTimed && getTimer(myColorRef.current == "white"
-                  ? player2TimeConsumed
-                  : player1TimeConsumed, "Opponant's"
-              )}
-              <p> {isMyTurn ? "Turn : You" : "Turn : Opponant"} </p>  
-          </div>
-          }
-          
-        
-          <ChessBoard board={board} socket={socket} isMyTurn={isMyTurn} incomingMove={incomingMove} myColorRef={myColorRef.current} /> 
-          
-          {
-            isStarted && 
-            <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-              {isGameTimed && getTimer(myColorRef.current == "black"
-                  ? player2TimeConsumed
-                  : player1TimeConsumed, ""
-              )}
-          </div>
-          }
-          
-          
-          
-        </div>
-        <div className='col-span-2 bg-slate-800  flex justify-center h-[90vh] overflow-y-auto'>
-          <div className='pt-10'>
+      <div className='pt-8 max-w-screen-lg w-full px-4'>
+        <div className='grid grid-cols-1 md:grid-cols-6 gap-4 w-full'>
+          <div className='w-full flex flex-col justify-center items-center md:col-span-4'>
             {
-              !isStarted && 
-              <div className="flex justify-center items-center text-white mb-4">
-                <input
-                  type="checkbox"
-                  id="includeTime"
-                  checked={includeTime}
-                  onChange={() => setIncludeTime(!includeTime)}
-                  className="mr-2"
-                />
-                <label htmlFor="includeTime">Include Time Limit</label>
+              isStarted && 
+              <div className='p-4 w-full md:w-3/4 text-green-500 flex flex-col sm:flex-row justify-between'>
+                {isGameTimed && getTimer(myColorRef.current == "white"
+                    ? player2TimeConsumed
+                    : player1TimeConsumed, "Opponant's"
+                )}
+                <p> {isMyTurn ? "Turn : You" : "Turn : Opponant"} </p>  
               </div>
             }
-          
-            <div className='flex flex-col gap-4'>
-          
-          {!isStarted && !isConnected && <Button className="py-3 px-2 text-lg" onClick={()=>{
-            socket.send(JSON.stringify({
-              type:INIT_GAME,
-              "is_game_timed": includeTime
-            }))
-            setIsConnected(true);
-          }} >
-                Play Online
-          </Button> }
-
-
-          {!isStarted && !isConnected && <Button className="py-3 px-2 text-lg" onClick={()=>{
-            socket.send(JSON.stringify({
-              type:BOT_INIT_GAME,
-              "is_game_timed": false
-            }))
-            setIsConnected(true);
-          }} >
-                Play Bots
-          </Button> }
-
-
-          {!isStarted && isConnected && <div className="py-4 px-6"  >
-               <p className='text-white'> Waiting form other user to connect ... </p>
-          </div> }
-
-
-          {!isGameOver && !isConnected &&  <Button className="py-3 px-2 text-lg" onClick={()=>{
-            navigate("/")
-          }} >
-                Home 
-          </Button> }
-
-
-          </div>
-
-          </div>
-          {
-            isStarted && 
-
-            <div className='col-span-2 bg-slate-800 flex flex-col items-center'>
-              <h4 className='text-white my-7'>Moves</h4>
-              {
-              <div className='flex flex-col gap-2 text-white'>
-                  {moveStack.map((move:any, index:any) => (
-                    <div key={index}>{move}</div>
-                  ))}
+            <ChessBoard board={board} socket={socket} isMyTurn={isMyTurn} incomingMove={incomingMove} myColorRef={myColorRef.current} /> 
+            {
+              isStarted && 
+              <div className='p-4 w-full md:w-3/4 text-green-500 flex flex-col sm:flex-row justify-between'>
+                {isGameTimed && getTimer(myColorRef.current == "black"
+                    ? player2TimeConsumed
+                    : player1TimeConsumed, ""
+                )}
               </div>
-              }
+            }
           </div>
-          }
-          
+          <div className='bg-slate-800 flex flex-col md:col-span-2 h-auto md:h-[90vh] overflow-y-auto'>
+            <div className='pt-6 w-full flex flex-col items-center gap-4'>
+              {
+                !isStarted && 
+                <div className="flex justify-center items-center text-white">
+                  <input
+                    type="checkbox"
+                    id="includeTime"
+                    checked={includeTime}
+                    onChange={() => setIncludeTime(!includeTime)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="includeTime">Include Time Limit</label>
+                </div>
+              }
+              <div className='flex flex-col gap-4 w-full justify-center items-center'>
+                {!isStarted && !isConnected && <Button className="py-3 px-2 text-lg w-full sm:w-auto" onClick={()=>{
+                  socket.send(JSON.stringify({
+                    type:INIT_GAME,
+                    "is_game_timed": includeTime
+                  }))
+                  setIsConnected(true);
+                }} >
+                      Play Online
+                </Button> }
+                {!isStarted && !isConnected && <Button className="py-3 px-2 text-lg w-full sm:w-auto" onClick={()=>{
+                  socket.send(JSON.stringify({
+                    type:BOT_INIT_GAME,
+                    "is_game_timed": false
+                  }))
+                  setIsConnected(true);
+                }} >
+                      Play Bots
+                </Button> }
+                {!isStarted && isConnected && <div className="py-4 px-6"  >
+                     <p className='text-white'> Waiting form other user to connect ... </p>
+                </div> }
+                {!isGameOver && !isConnected &&  <Button className="py-3 px-2 text-lg w-full sm:w-auto" onClick={()=>{
+                  navigate("/")
+                }} >
+                      Home 
+                </Button> }
+              </div>
+            </div>
+            {
+              isStarted && 
+              <div className='w-full bg-slate-800 flex flex-col items-center mt-4'>
+                <h4 className='text-white my-7'>Moves</h4>
+                <div className='flex flex-col gap-2 text-white items-center w-full px-4'>
+                    {moveStack.map((move:any, index:any) => (
+                      <div key={index}>{move}</div>
+                    ))}
+                </div>
+              </div>
+            }
+          </div>
         </div>
-
-      </div>
       </div>
     </div>
   )

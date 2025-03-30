@@ -42,7 +42,7 @@ export class AuthService {
         body,
         config
       );
-      console.log(res)
+      // console.log(res)
       return {status: "true", access_token: res.data.access, refresh_token: res.data.refresh, username: res.data.user.email };
       
     } catch (error) {
@@ -75,7 +75,7 @@ export class AuthService {
         body,
         config
       );
-      console.log(res.data)
+      // console.log(res.data)
       return {status: "true" , username: res.data.email};
 
     } catch (error) {
@@ -92,7 +92,7 @@ export class AuthService {
 
 
   async normalRegister({username, email, password1, password2 }: NormalLoginRegisterParams): Promise<any> {
-    console.log("he")
+    // console.log("he")
 
     const config = {
       headers: {
@@ -106,7 +106,7 @@ export class AuthService {
         body,
         config
       );
-      console.log(res.data)
+      // console.log(res.data)
       return { ...res.data, status: "true" };
 
     } catch (error) {
@@ -124,7 +124,7 @@ export class AuthService {
 
 
   async normalLogin({username, email, password }: NormalLoginRegisterParams): Promise<any> {
-    console.log("he")
+    // console.log("he")
 
     const config = {
       headers: {
@@ -138,7 +138,7 @@ export class AuthService {
         body,
         config
       );
-      console.log(res.data)
+      // console.log(res.data)
       return { ...res.data, status: "true" };
 
     } catch (error) {

@@ -18,7 +18,7 @@ def remove_games(games):
     
 
 def remove_games_with_users(games):
-    users = {g.player1.user for g in games} | {g.player2.user for g in games}
+    users = {g.player1.user for g in games if g.player1} | {g.player2.user for g in games if g.player2}
 
     game_manager.games = [g for g in game_manager.games if g not in games]
     game_manager.bot_games = [g for g in game_manager.bot_games if g not in games]

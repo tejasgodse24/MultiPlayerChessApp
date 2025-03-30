@@ -18,7 +18,7 @@ class ChessConsumer(AsyncWebsocketConsumer):
         self.room_group_name = None
 
     async def connect(self):
-        print("connect : ", self.scope['url_route'])
+        # print("connect : ", self.scope['url_route'])
         self.user = self.scope['user']
         try:
             token = AccessToken(self.scope['url_route']['kwargs']['token'])
@@ -42,7 +42,7 @@ class ChessConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         json_data = json.loads(text_data)
-        print("json_data", json_data)
+        # print("json_data", json_data)
         await game_manager.add_handler(socket=self, message=json_data)
         
 

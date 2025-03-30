@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import ChessBoard2 from '../components/ChessBoard2'
 
-
 export const INIT_GAME = "init_game"
 export const MOVE = "move"
 export const GAME_OVER = "game_over"
@@ -21,11 +20,8 @@ export const USER_CONNECTED = "user_connected"
 export const GAME_NOT_LIVE = "game_not_live"
 export const CONNECT_WATCH_USER= "connect_watch_user"
 
-
 const GAME_TIME_MS = 10 * 60 * 1000;
 // const GAME_TIME_MS = 1 * 60 * 1000;
-
-
 
 const GameWatch = () => {
 
@@ -39,7 +35,6 @@ const GameWatch = () => {
 
   const [isPopupOpen] = useState(true);
 
-
   const [moveStack, setMoveStack] = useState<any[]>([]);
 
   const [incomingMove, setIncomingMove] = useState<string>("")
@@ -50,7 +45,6 @@ const GameWatch = () => {
   const [player1TimeConsumed, setPlayer1TimeConsumed] = useState(0);
   const [player2TimeConsumed, setPlayer2TimeConsumed] = useState(0);
 
-
   const [currTurn, setCurrTurn] = useState<string>("")
   const { gameid } = useParams();
 
@@ -58,17 +52,17 @@ const GameWatch = () => {
 
   useEffect(()=>{
     if(!socket2){
-        console.log("not socket is here")
+        // console.log("not socket is here")
       return
     }
     
     socket2.onmessage = (event) =>{
       const message = JSON.parse(event.data)
-      console.log(message);
+      // console.log(message);
       switch(message.type){
         case USER_CONNECTED:
           // setIsConnected(true)
-          console.log("user connected", message.message)
+          // console.log("user connected", message.message)
           break;
         case MOVE:
             let move = message.move;
@@ -114,7 +108,7 @@ const GameWatch = () => {
           setIsStarted(true);
           break;
         case CONNECT_WATCH_USER:
-            console.log("CONNECT_WATCH_USER : ", message)
+            // console.log("CONNECT_WATCH_USER : ", message)
           
             chess.load(message.fen_string)
             setIncomingMove(message.last_move); //incoming from ws server
@@ -132,13 +126,11 @@ const GameWatch = () => {
             showToast(message.message);
             break;
         default:
-          console.log("default : ", message)
+          // console.log("default : ", message)
           break;
       }
     }
   }, [socket2, chess])
-
-
   
   useEffect(() => {
     if (isStarted && isGameTimed) {
@@ -173,75 +165,58 @@ const GameWatch = () => {
 
   if(!socket2) return <div>Connecting...</div>
 
-
   return (
-    
-
     <div className='flex justify-center'>
       {isPopupOpen && (
         <Popup />
       )}
-      <div className='pt-8 max-w-screen-lg w-full'>
-      <div className='grid grid-cols-6 gap-4 w-full'>
-        <div className='col-span-4 w-full flex-col flex justify-center items-center'>
-
-
-          <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-            {
-              isGameTimed &&  getTimer(player2TimeConsumed, "black")
-            }
-            <p> {`Turn : ${currTurn}`} </p>  
-          </div>
-        
-          <ChessBoard2 board={board} incomingMove={incomingMove} /> 
-
-          <div className='p-4 w-3/4  text-green-500 flex flex-row justify-between'>
-            {
-              isGameTimed && getTimer(player1TimeConsumed, "white")
-            }
-          </div>
-          
-          
-        </div>
-        <div className='col-span-2 bg-slate-800  flex justify-center h-[90vh] overflow-y-auto'>
-          <div className='pt-10'>
-
-
-          {!isStarted && <Button className="py-4 px-6" onClick={()=>{
-            socket2.send(JSON.stringify({
-              type:CONNECT_WATCH_USER,
-              gameid: gameid
-            }))
-            // setIsConnected(true);
-          }} >
-                Watch Live Game 
-          </Button> }
-
-          {!isGameOver &&  <Button className="py-4 px-6" onClick={()=>{
-            navigate("/")
-          }} >
-                Home 
-          </Button> }
-
-          </div>
-          {
-            isStarted && 
-
-            <div className='col-span-2 bg-slate-800 flex flex-col items-center'>
-              <h4 className='text-white my-7'>Moves</h4>
+      <div className='pt-8 max-w-screen-lg w-full px-4'>
+        <div className='grid grid-cols-1 md:grid-cols-6 gap-4 w-full'>
+          <div className='w-full flex flex-col justify-center items-center md:col-span-4'>
+            <div className='p-4 w-full md:w-3/4 text-green-500 flex flex-col sm:flex-row justify-between'>
               {
-              <div className='flex flex-col gap-2 text-white'>
-                  {moveStack.map((move:any, index:any) => (
-                    <div key={index}>{move}</div>
-                  ))}
-              </div>
+                isGameTimed &&  getTimer(player2TimeConsumed, "black")
               }
-          </div>
-          }
-          
-        </div>
+              <p> {`Turn : ${currTurn}`} </p>  
+            </div>
+        
+            <ChessBoard2 board={board} incomingMove={incomingMove} /> 
 
-      </div>
+            <div className='p-4 w-full md:w-3/4 text-green-500 flex flex-col sm:flex-row justify-between'>
+              {
+                isGameTimed && getTimer(player1TimeConsumed, "white")
+              }
+            </div>
+          </div>
+          <div className='bg-slate-800 flex flex-col  md:col-span-2 h-auto md:h-[90vh] overflow-y-auto'>
+            <div className='pt-10 w-full flex flex-col items-center gap-4'>
+              {!isStarted && <Button className="py-4 px-6 w-full sm:w-auto" onClick={()=>{
+                socket2.send(JSON.stringify({
+                  type:CONNECT_WATCH_USER,
+                  gameid: gameid
+                }))
+                // setIsConnected(true);
+              }} >
+                    Watch Live Game 
+              </Button> }
+              {!isGameOver &&  <Button className="py-4 px-6 w-full sm:w-auto" onClick={()=>{
+                navigate("/")
+              }} >
+                    Home 
+              </Button> }
+            </div>
+            {isStarted && 
+              <div className='w-full bg-slate-800 flex flex-col items-center mt-4'>
+                <h4 className='text-white my-7'>Moves</h4>
+                <div className='flex flex-col gap-2 text-white w-full px-4'>
+                    {moveStack.map((move:any, index:any) => (
+                      <div key={index}>{move}</div>
+                    ))}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
       </div>
     </div>
   )

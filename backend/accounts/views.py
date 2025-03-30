@@ -29,18 +29,16 @@ class GoogleLogin(SocialLoginView): # if you want to use Authorization Code Gran
 
 class CustomTokenVerifyView(TokenVerifyView):
     def post(self, request, *args, **kwargs):
-        print("hello")
-        token = request.data.get("token")
         try:
+            token = request.data.get("token")
             payload = UntypedToken(token)  # Decode token
             user_id = payload.get("user_id")
 
             user = User.objects.get(id=user_id)
-            print("email",  user.email)
             return Response({
                 "message": "Token is valid",
                 "email": user.email
             }, status=status.HTTP_200_OK)
         
         except Exception as e:
-            raise AuthenticationFailed("Invalid token")
+            print(e)
